@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# 🔐 ENVIRONMENT VARIABLES (ADD THIS SECTION)
+.env
+.env.*
+!.env.example
+
+# Supabase
+supabase/.temp/
+supabase/.env.local
+
+# Build outputs
+/build
+/.supabase
+
+
+# TypeScript
+*.tsbuildinfo

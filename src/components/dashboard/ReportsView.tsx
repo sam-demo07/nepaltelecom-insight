@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface ReportsViewProps {
   isAdmin: boolean;
@@ -39,7 +41,91 @@ export default function ReportsView({ isAdmin }: ReportsViewProps) {
   };
 
   const exportToPDF = () => {
-    toast.info("PDF export feature will be implemented with a backend function");
+    if (reports.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+
+      const monthName = new Date(year, month - 1).toLocaleString("default", { month: "long" });
+
+      doc.setFontSize(18);
+      doc.text("Nepal Telecom MIS", doc.internal.pageSize.getWidth() / 2, 15, { align: "center" });
+
+      doc.setFontSize(14);
+      doc.text(`Monthly Report - ${monthName} ${year}`, doc.internal.pageSize.getWidth() / 2, 25, { align: "center" });
+
+      const tableData = reports.map(report => [
+        report.provinces?.name || "Unknown",
+        (report.gsm_subscribers || 0).toLocaleString(),
+        (report.cdma_subscribers || 0).toLocaleString(),
+        (report.pstn_subscribers || 0).toLocaleString(),
+        (report.adsl_subscribers || 0).toLocaleString(),
+        (report.ftth_subscribers || 0).toLocaleString(),
+        (report.total_subscribers || 0).toLocaleString(),
+        parseFloat(report.total_revenue || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }),
+      ]);
+
+      tableData.push([
+        "TOTAL",
+        "-",
+        "-",
+        "-",
+        "-",
+        "-",
+        totals.subscribers.toLocaleString(),
+        totals.revenue.toLocaleString(undefined, { maximumFractionDigits: 2 }),
+      ]);
+
+      autoTable(doc, {
+        startY: 35,
+        head: [["Province", "GSM", "CDMA", "PSTN", "ADSL", "FTTH", "Total Subscribers", "Total Revenue (NPR)"]],
+        body: tableData,
+        theme: "grid",
+        headStyles: {
+          fillColor: [76, 175, 80],
+          textColor: 255,
+          fontStyle: "bold",
+        },
+        footStyles: {
+          fillColor: [232, 245, 233],
+          textColor: 0,
+          fontStyle: "bold",
+        },
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+        },
+        columnStyles: {
+          0: { cellWidth: 30 },
+          1: { halign: "right", cellWidth: 20 },
+          2: { halign: "right", cellWidth: 20 },
+          3: { halign: "right", cellWidth: 20 },
+          4: { halign: "right", cellWidth: 20 },
+          5: { halign: "right", cellWidth: 20 },
+          6: { halign: "right", cellWidth: 28 },
+          7: { halign: "right", cellWidth: 32 },
+        },
+      });
+
+      const finalY = (doc as any).lastAutoTable.finalY || 35;
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(
+        `Generated on ${new Date().toLocaleString()}`,
+        doc.internal.pageSize.getWidth() / 2,
+        finalY + 15,
+        { align: "center" }
+      );
+
+      doc.save(`report-${year}-${month}.pdf`);
+      toast.success("PDF exported successfully!");
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast.error("Failed to generate PDF");
+    }
   };
 
   const totals = reports.reduce(

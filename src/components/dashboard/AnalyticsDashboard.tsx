@@ -40,16 +40,47 @@ export default function AnalyticsDashboard() {
     if (provincesRes.data) setProvinces(provincesRes.data);
   };
 
-  const calculateStats = (data: any[]) => {
+  const calculateStats = async (data: any[]) => {
     const totalSubscribers = data.reduce((sum, r) => sum + (r.total_subscribers || 0), 0);
     const totalRevenue = data.reduce((sum, r) => sum + parseFloat(r.total_revenue || 0), 0);
-    
+
+    const growthRate = await calculateGrowthRate();
+
     setStats({
       totalSubscribers,
       totalRevenue,
-      avgGrowth: 5.2,
+      avgGrowth: growthRate,
       provincesReporting: data.length,
     });
+  };
+
+  const calculateGrowthRate = async () => {
+    const previousMonth = month === 1 ? 12 : month - 1;
+    const previousYear = month === 1 ? year - 1 : year;
+
+    const { data: previousData } = await supabase
+      .from("monthly_reports")
+      .select("total_subscribers")
+      .eq("year", previousYear)
+      .eq("month", previousMonth);
+
+    const { data: currentData } = await supabase
+      .from("monthly_reports")
+      .select("total_subscribers")
+      .eq("year", year)
+      .eq("month", month);
+
+    if (!previousData || !currentData || previousData.length === 0 || currentData.length === 0) {
+      return 0;
+    }
+
+    const previousTotal = previousData.reduce((sum, r) => sum + (r.total_subscribers || 0), 0);
+    const currentTotal = currentData.reduce((sum, r) => sum + (r.total_subscribers || 0), 0);
+
+    if (previousTotal === 0) return 0;
+
+    const growth = ((currentTotal - previousTotal) / previousTotal) * 100;
+    return parseFloat(growth.toFixed(2));
   };
 
   const provinceData = reports.map(r => ({
@@ -123,7 +154,8 @@ export default function AnalyticsDashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+{stats.avgGrowth}%</div>
+            <div className="text-2xl font-bold">{stats.avgGrowth >= 0 ? '+' : ''}{stats.avgGrowth}%</div>
+            <p className="text-xs text-muted-foreground mt-1">vs previous month</p>
           </CardContent>
         </Card>
 

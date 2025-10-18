@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { BarChart3, FileText, LogOut, PlusCircle, TrendingUp } from "lucide-react";
+import { BarChart3, FileText, LogOut, PlusCircle, TrendingUp, GitCompare } from "lucide-react";
 import DataEntryForm from "@/components/dashboard/DataEntryForm";
 import AnalyticsDashboard from "@/components/dashboard/AnalyticsDashboard";
 import ReportsView from "@/components/dashboard/ReportsView";
+import ComparisonView from "@/components/dashboard/ComparisonView";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -102,7 +103,7 @@ export default function Dashboard() {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
               Analytics
@@ -113,6 +114,10 @@ export default function Dashboard() {
                 Data Entry
               </TabsTrigger>
             )}
+            <TabsTrigger value="comparison" className="flex items-center gap-2">
+              <GitCompare className="h-4 w-4" />
+              Comparison
+            </TabsTrigger>
             <TabsTrigger value="reports" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Reports
@@ -138,6 +143,10 @@ export default function Dashboard() {
               </Card>
             </TabsContent>
           )}
+
+          <TabsContent value="comparison" className="space-y-6">
+            <ComparisonView />
+          </TabsContent>
 
           <TabsContent value="reports" className="space-y-6">
             <ReportsView isAdmin={isAdmin} />

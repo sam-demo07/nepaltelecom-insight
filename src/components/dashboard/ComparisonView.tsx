@@ -64,7 +64,7 @@ export default function ComparisonView() {
             const report = data.find(r => r.month === month && r.province_id === provinceId);
             if (province) {
               monthData[`${province.name}_subscribers`] = report?.total_subscribers || 0;
-              monthData[`${province.name}_revenue`] = parseFloat(report?.total_revenue || "0");
+              monthData[`${province.name}_revenue`] = parseFloat(String(report?.total_revenue || "0"));
             }
           });
 
@@ -92,7 +92,7 @@ export default function ComparisonView() {
 
             if (province) {
               const totalSubscribers = yearReports.reduce((sum, r) => sum + (r.total_subscribers || 0), 0);
-              const totalRevenue = yearReports.reduce((sum, r) => sum + parseFloat(r.total_revenue || "0"), 0);
+              const totalRevenue = yearReports.reduce((sum, r) => sum + Number(r.total_revenue || 0), 0);
 
               yearData[`${province.name}_subscribers`] = totalSubscribers;
               yearData[`${province.name}_revenue`] = totalRevenue;
